@@ -1,3 +1,6 @@
 /.vs
 /WebServer/bin
 /WebServer/obj
+/WebServer/logs
+/Infrastructure/bin
+/Infrastructure/obj
