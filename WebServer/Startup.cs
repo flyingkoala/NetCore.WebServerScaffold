@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Infrastructure.Config;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
 using WebServer.Filter;
 
@@ -17,9 +21,18 @@ namespace WebServer
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IConfigurationRoot _configRoot;
+        public Startup(IHostingEnvironment env)
         {
-            Configuration = configuration;
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                .AddEnvironmentVariables();
+            Configuration = builder.Build();
+
+            //_hostingEnv = env;
+            _configRoot = builder.Build();
         }
 
         public IConfiguration Configuration { get; }
@@ -27,6 +40,43 @@ namespace WebServer
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //绑定配置文件
+            services.Configure<Config>(Configuration.GetSection("Config"));
+            services.AddSingleton<ConfigService>();
+
+            //添加jwt验证：
+            string securityKey = Configuration.GetSection("Config").GetSection("apiauth").GetValue<string>("securitykey");
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,//是否验证Issuer
+                        ValidateAudience = true,//是否验证Audience
+                        ValidateLifetime = true,//是否验证失效时间
+                        ValidateIssuerSigningKey = true,//是否验证SecurityKey
+                        ValidIssuer = DataKey.JWT_ValidIssuer,//Issuer，这两项和前面签发jwt的设置一致
+                        ValidAudience = DataKey.JWT_ValidAudience,//Audience
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey))//Configuration["SecurityKey"]拿到SecurityKey
+                    };
+                });
+
+            //格式化输出时间 services.AddMvc();
+            services.AddMvc().AddJsonOptions(options =>
+            {
+                options.SerializerSettings.DateFormatString = "yyyy-MM-dd HH:mm:ss";
+            });
+            //跨域
+            services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy", corsBuilder =>
+                {
+                    corsBuilder.AllowAnyHeader();
+                    corsBuilder.AllowAnyMethod();
+                    corsBuilder.AllowAnyOrigin();
+                    corsBuilder.AllowCredentials();
+                });
+            });
 
             //注册Swagger生成器，定义一个和多个Swagger 文档
             services.AddSwaggerGen(c =>
@@ -43,7 +93,6 @@ namespace WebServer
 
             });
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -57,6 +106,9 @@ namespace WebServer
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebServer API V1");
                 c.RoutePrefix = string.Empty;
             });
+
+            app.UseAuthentication();//注意添加这一句，启用jwt验证
+            app.UseCors("CorsPolicy");
 
             if (env.IsDevelopment())
             {

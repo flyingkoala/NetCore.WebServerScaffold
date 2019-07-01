@@ -4,3 +4,5 @@
 /WebServer/logs
 /Infrastructure/bin
 /Infrastructure/obj
+/Model/bin
+/Model/obj

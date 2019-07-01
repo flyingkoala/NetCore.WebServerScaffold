@@ -9,7 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 
-namespace Infrastructure
+namespace Infrastructure.Log
 {
     public class LogHelper
     {
