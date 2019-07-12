@@ -6,3 +6,9 @@
 /Infrastructure/obj
 /Model/bin
 /Model/obj
+/Application/bin
+/Application/obj
+/IRepository/bin
+/IRepository/obj
+/Repository/bin
+/Repository/obj

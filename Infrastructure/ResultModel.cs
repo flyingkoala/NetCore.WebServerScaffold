@@ -84,6 +84,12 @@ namespace Infrastructure
         [Description("TOKEN效验失败")]
         TokenVerifyFail = 700,
 
+        /// <summary>
+        /// 用户不存在
+        /// </summary>
+        [Description("用户不存在")]
+        User_IsNotExist = 11011,
+
 
 
 

@@ -41,25 +41,9 @@ namespace WebServer
         public void ConfigureServices(IServiceCollection services)
         {
             //绑定配置文件
-            services.Configure<Config>(Configuration.GetSection("Config"));
+            services.Configure<ServerConfig>(Configuration.GetSection("Config"));
             services.AddSingleton<ConfigService>();
 
-            //添加jwt验证：
-            string securityKey = Configuration.GetSection("Config").GetSection("apiauth").GetValue<string>("securitykey");
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
-                {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,//是否验证Issuer
-                        ValidateAudience = true,//是否验证Audience
-                        ValidateLifetime = true,//是否验证失效时间
-                        ValidateIssuerSigningKey = true,//是否验证SecurityKey
-                        ValidIssuer = DataKey.JWT_ValidIssuer,//Issuer，这两项和前面签发jwt的设置一致
-                        ValidAudience = DataKey.JWT_ValidAudience,//Audience
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey))//Configuration["SecurityKey"]拿到SecurityKey
-                    };
-                });
 
             //格式化输出时间 services.AddMvc();
             services.AddMvc().AddJsonOptions(options =>
@@ -107,7 +91,6 @@ namespace WebServer
                 c.RoutePrefix = string.Empty;
             });
 
-            app.UseAuthentication();//注意添加这一句，启用jwt验证
             app.UseCors("CorsPolicy");
 
             if (env.IsDevelopment())

@@ -8,14 +8,14 @@ namespace Infrastructure.Config
 {
     public class ConfigService
     {
-        private readonly IOptions<Config> _configuration;
-        public ConfigService(IOptions<Config> configuration)
+        private readonly IOptions<ServerConfig> _configuration;
+        public ConfigService(IOptions<ServerConfig> configuration)
         {
             _configuration = configuration;
 
         }
 
-        public Config config
+        public ServerConfig config
         {
             get
             {

@@ -18,4 +18,13 @@ namespace Model.Request
         [Required]
         public string pass { get; set; }
     }
+
+    public class AuthReq_RefreshToken
+    {
+        /// <summary>
+        /// 名称(heygears)
+        /// </summary>
+        [Required]
+        public string refresh_token { get; set; }
+    }
 }

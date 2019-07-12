@@ -27,7 +27,7 @@ namespace WebServer.Controllers
         /// </remarks>
         /// <returns></returns>
         [HttpGet("test1")]
-        [AllowAnonymous]
+        //[AllowAnonymous]
         public ActionResult<IEnumerable<string>> Get()
         {
             LogHelper.Log.Debug("测试日志功能");
